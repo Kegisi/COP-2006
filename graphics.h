@@ -6,23 +6,38 @@
 #define FINAL_GRAPHICS_H
 #include <iostream>
 #include <cstdlib>
+#include <Windows.h>
 
 struct Screen
 {
 public:
     static void HideCursor()
     {
-        std::cout << "\\033[?25l";
+        HANDLE hStdOut = NULL;
+        CONSOLE_CURSOR_INFO curInfo;
+
+        hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        GetConsoleCursorInfo(hStdOut, &curInfo);
+        curInfo.bVisible = FALSE;
+        SetConsoleCursorInfo(hStdOut, &curInfo);
+
     }
 
     static void ShowCursor()
     {
-        std::cout << "\\033[?25h";
+        HANDLE hStdOut = NULL;
+        CONSOLE_CURSOR_INFO curInfo;
+
+        hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        GetConsoleCursorInfo(hStdOut, &curInfo);
+        curInfo.bVisible = TRUE;
+        SetConsoleCursorInfo(hStdOut, &curInfo);
+
     }
 
     static void Clear()
     {
-        system("CLS");
+        std::cout << "\033[0;0H";  // moves cursor to origin to overwrite
     }
 
 };

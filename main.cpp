@@ -17,10 +17,12 @@ class GameEntity
 {
 public:
     int x, y;
+    char symbol;
 
-    GameEntity(int x, int y)
+    GameEntity(int x, int y, char symbol)
     : x(x)
     , y(y)
+    , symbol(symbol)
     {}
 
     void Move(char direction)
@@ -60,38 +62,74 @@ public:
             y = SCREEN_HEIGHT;
         }
     }
+
+    [[nodiscard]] int GetX() const
+    {
+        return x;
+    }
+
+    [[nodiscard]] int GetY() const
+    {
+        return y;
+    }
+
+    [[nodiscard]] char GetSymbol() const
+    {
+        return symbol;
+    }
 };
 
 class Player : public GameEntity
 {
 public:
-    Player(int x, int y) : GameEntity(x, y){}
+    Player(int x, int y, char symbol) : GameEntity(x, y, symbol)
+    {}
+
+    bool TouchingBorder()
+    {
+        if (x == SCREEN_WIDTH)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 };
 
 class Orc : public GameEntity
 {
 public:
-    Orc(int x, int y) : GameEntity(x, y){}
+    Orc(int x, int y, char symbol) : GameEntity(x, y, symbol)
+    {}
 };
 
-class Game
+struct Game
 {
-public:
     int turn_counter = 0;
     bool running = true;
+    int stage = 0;  // 0: title slide, 1: orc fight, 2: note, 3: forest, 4: pre-boss, 5: boss fight, 6: end slide
 
-    void UpdateScreen(Player player)
+    void UpdateScreen(GameEntity *entity)
     {
+        bool space_occupied;
         Screen::Clear();
         for (int y_pos=1; y_pos < SCREEN_HEIGHT+1; y_pos++)
         {
             for (int x_pos=1; x_pos < SCREEN_WIDTH+1; x_pos++)
             {
-                if ( ((x_pos) == player.x)  && ((y_pos) == player.y) )
+                space_occupied = false;
+                for (int i=0; i<4; i++)
                 {
-                    std::cout << "@ ";
+                    if ( (x_pos == (entity+i)->GetX()) && (y_pos == (entity+i)->GetY()) )
+                    {
+                        std::cout << (entity+i)->GetSymbol() << ' ';
+                        space_occupied = true;
+                        break;
+                    }
                 }
-                else
+                if (!space_occupied)
                 {
                     std::cout << ". ";
                 }
@@ -100,6 +138,46 @@ public:
         }
         std::cout << "\nTurn:" << turn_counter << "\n\n";
         turn_counter++;
+    }
+
+    void ManageStage(GameEntity *entity)
+    {
+        switch (stage)
+        {
+            case 0:  // First Orc Fight
+                UpdateScreen(entity);
+                if (entity[0].x == SCREEN_WIDTH-1)
+                {
+                    stage++;
+                }
+                break;
+            case 1:  // Lore
+                std::cout << "lore";
+                system("PAUSE");
+                system("cls");
+                Screen::Clear();
+                stage++;
+                entity[0].x = 2;
+                break;
+            case 2:  // Second Orc Fight in forest
+                UpdateScreen(entity);
+                if (entity[0].x == SCREEN_WIDTH-1)
+                {
+                    stage++;
+                }
+                break;
+            case 3:  // Pre-boss
+                std::cout << "You gotta kill boss etc";
+                system("PAUSE");
+                system("cls");
+                stage++;
+                entity[0].x = 2;
+                break;
+            /*case 4:  // Boss fight
+                UpdateScreen(entity);
+            case 5:  // Game Over*/
+
+        }
     }
 
     void Quit()
@@ -111,14 +189,31 @@ public:
 
 int main()
 {
-    Player _player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
-    Orc orcs[] = {Orc(3,4)};
-    Orc *orc = orcs;
-    std::cout << "Welcome to the game!\n";
-    system("PAUSE");
+    Player player(2, SCREEN_HEIGHT/2, PLAYER_SYMBOL);
+    Player *_player;
+    _player = &player;
+
+    GameEntity entities[] = {*_player,
+                             Orc((SCREEN_WIDTH*2/3),SCREEN_HEIGHT/2, ORC_SYMBOL),
+                             Orc((SCREEN_WIDTH/2),SCREEN_HEIGHT*3/4, ORC_SYMBOL),
+                             Orc((SCREEN_WIDTH/5),SCREEN_HEIGHT/3, ORC_SYMBOL)};
+
     Game game;
+    std::cout << "Welcome to the game!\n\n";
+    std::cout << "----------------------------------------------------------------------------------------";
+    std::cout << "\nYou are a knight charged with finding and retrieving the princess of The Kingdom who \n"
+                 "was kidnapped by Orcs! The court wizard found them to have taken her to the East. You \n"
+                 "depart from the gates and your quest suddenly begins as you come face to face with some \n"
+                 "bloodthirsty orcs...\n";
+    std::cout << "\nYour sword can only slay 3 orcs before breaking, after which, you are vulnerable! Your\n"
+                 " goal is to continue eastward until you find the princess! Good luck...\n";
+    std::cout << "----------------------------------------------------------------------------------------\n\n";
+
+    system("PAUSE");
+    system("cls");
+    Screen::Clear();
     Screen::HideCursor();
-    game.UpdateScreen(_player);
+    game.UpdateScreen(entities);
     while (game.running)
     {
         // Get input
@@ -129,9 +224,9 @@ int main()
         }
         else
         {
-            _player.Move(input);
+            entities[0].Move(input);
         }
 
-        game.UpdateScreen(_player);
+        game.ManageStage(entities);
     }
 }

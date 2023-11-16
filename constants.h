@@ -5,6 +5,9 @@
 #ifndef FINAL_CONSTANTS_H
 #define FINAL_CONSTANTS_H
 
+char PLAYER_SYMBOL = '@';
+char ORC_SYMBOL = 'o';
+
 int SCREEN_HEIGHT = 8, SCREEN_WIDTH = 20;
 int NUMBER_OF_ORCS = 3;  // must be >0
 
