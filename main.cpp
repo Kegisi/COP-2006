@@ -8,7 +8,7 @@
  */
 
 #include <iostream>
-#include <conio.h>
+#include <conio.h>  // library that allows me to take user input without the need to hit space
 
 #include "constants.h"
 #include "graphics.h"
@@ -63,17 +63,32 @@ public:
         }
     }
 
-    [[nodiscard]] int GetX() const
+    void Kill()
+    {
+        x = 0;
+        y = 0;
+    }
+
+    bool Colliding(GameEntity entity) const
+    {
+        if ( (x == entity.x) && (y == entity.y) )
+        {
+            return true;
+        }
+        return false;
+    }
+
+    int GetX() const
     {
         return x;
     }
 
-    [[nodiscard]] int GetY() const
+    int GetY() const
     {
         return y;
     }
 
-    [[nodiscard]] char GetSymbol() const
+    char GetSymbol() const
     {
         return symbol;
     }
@@ -84,18 +99,6 @@ class Player : public GameEntity
 public:
     Player(int x, int y, char symbol) : GameEntity(x, y, symbol)
     {}
-
-    bool TouchingBorder()
-    {
-        if (x == SCREEN_WIDTH)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
 };
 
 class Orc : public GameEntity
@@ -145,38 +148,39 @@ struct Game
         switch (stage)
         {
             case 0:  // First Orc Fight
+            case 2:  // Second Orc Fight in forest
+            case 4:  // Boss fight
                 UpdateScreen(entity);
+                for (int i=1; i<4; i++)  // delete orcs if the player touches them
+                {
+                    if (entity[i].Colliding(entity[0]))
+                    {
+                        entity[i].Kill();
+                    }
+                }
                 if (entity[0].x == SCREEN_WIDTH-1)
                 {
                     stage++;
                 }
                 break;
             case 1:  // Lore
-                std::cout << "lore";
+                std::cout << "lore\n";
                 system("PAUSE");
                 system("cls");
                 Screen::Clear();
                 stage++;
                 entity[0].x = 2;
                 break;
-            case 2:  // Second Orc Fight in forest
-                UpdateScreen(entity);
-                if (entity[0].x == SCREEN_WIDTH-1)
-                {
-                    stage++;
-                }
-                break;
             case 3:  // Pre-boss
-                std::cout << "You gotta kill boss etc";
+                std::cout << "You gotta kill boss etc\n";
                 system("PAUSE");
                 system("cls");
                 stage++;
                 entity[0].x = 2;
                 break;
-            /*case 4:  // Boss fight
-                UpdateScreen(entity);
-            case 5:  // Game Over*/
-
+            case 5:  // Game Over
+                std::cout << "Game Over\n";
+                Game::Quit();
         }
     }
 
